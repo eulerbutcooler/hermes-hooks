@@ -1,9 +1,11 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 
+	"github.com/eulerbutcooler/hermes-common/pkg/logger"
 	"github.com/eulerbutcooler/hermes-hooks/internal/api"
 	"github.com/eulerbutcooler/hermes-hooks/internal/config"
 	"github.com/eulerbutcooler/hermes-hooks/internal/queue"
@@ -11,17 +13,26 @@ import (
 
 func main() {
 	cfg := config.LoadConfig()
+	appLogger := logger.New("hermes-hooks", cfg.Environment, cfg.LogLevel)
+
+	appLogger.Info("starting Hermes Hooks",
+		slog.String("version", "1.0.0"),
+		slog.String("port", cfg.Port),
+	)
+
 	natsQueue, err := queue.NewNatsQueue(cfg.NatsUrl)
 	if err != nil {
-		log.Fatalf("Fatal: Could not connect to NATS: %v", err)
+		appLogger.Error("NATS connection failed", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
-	log.Println("Success: Connected to NATS JetStream")
+	appLogger.Info("connected to NATS", slog.String("url", cfg.NatsUrl))
 
-	handler := api.NewHandler(natsQueue)
+	handler := api.NewHandler(natsQueue, appLogger)
 	r := api.NewRouter(handler)
 
-	log.Printf("Starting Webhook Server on port: %s...", cfg.Port)
+	appLogger.Info("webhook server listening", slog.String("port", cfg.Port))
 	if err := http.ListenAndServe(":"+cfg.Port, r); err != nil {
-		log.Fatalf("Server failed: %v", err)
+		appLogger.Error("server failed", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 }

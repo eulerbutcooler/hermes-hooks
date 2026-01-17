@@ -3,8 +3,17 @@ package config
 import "os"
 
 type Config struct {
-	Port    string
-	NatsUrl string
+	Port        string
+	NatsUrl     string
+	Environment string
+	LogLevel    string
+}
+
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
 }
 
 // Loads and Validates env variables
@@ -18,7 +27,9 @@ func LoadConfig() *Config {
 		natsUrl = "nats://localhost:4222"
 	}
 	return &Config{
-		Port:    port,
-		NatsUrl: natsUrl,
+		Port:        port,
+		NatsUrl:     natsUrl,
+		Environment: getEnv("ENV", "development"),
+		LogLevel:    getEnv("LOG_LEVEL", "INFO"),
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/eulerbutcooler/hermes-common/pkg/logger"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -21,8 +22,9 @@ func (m *MockProducer) Publish(zapID string, event ExecutionEvent) error {
 
 func TestHandleWebhook(t *testing.T) {
 	mockQueue := &MockProducer{}
-	handler := NewHandler(mockQueue)
+	testLogger := logger.New("hermes-hooks-test", "test", "debug")
 
+	handler := NewHandler(mockQueue, testLogger)
 	// Router to ensure URLParams are passed correctly
 	r := chi.NewRouter()
 	r.Post("/hooks/{relayID}", handler.HandleWebhook)
