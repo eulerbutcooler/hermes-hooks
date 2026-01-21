@@ -9,9 +9,11 @@ import (
 	"github.com/eulerbutcooler/hermes-hooks/internal/api"
 	"github.com/eulerbutcooler/hermes-hooks/internal/config"
 	"github.com/eulerbutcooler/hermes-hooks/internal/queue"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	_ = godotenv.Load()
 	cfg := config.LoadConfig()
 	appLogger := logger.New("hermes-hooks", cfg.Environment, cfg.LogLevel)
 
